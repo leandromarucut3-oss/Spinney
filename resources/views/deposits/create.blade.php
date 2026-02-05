@@ -60,13 +60,27 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose a package to start buying shares and set your investment amount</p>
 
                 <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    @foreach($packages as $package)
-                        <button type="button" data-open-deposit-modal data-package-id="{{ $package->id }}" data-min="{{ $package->min_amount }}" data-max="{{ $package->max_amount }}" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 hover:border-spinneys-green transition-colors p-4 flex items-center justify-center">
+                    @forelse($packages as $package)
+                        <button type="button" data-open-deposit-modal data-package-id="{{ $package->id }}" data-min="{{ $package->min_amount }}" data-max="{{ $package->max_amount }}" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 hover:border-spinneys-green transition-colors p-4 flex flex-col items-center gap-3">
                             @if($package->image)
-                                <img src="{{ asset($package->image) }}" alt="{{ $package->name }}" class="w-full h-auto object-contain">
+                                <img src="{{ asset($package->image) }}" alt="{{ $package->name }}" class="w-full h-24 object-contain">
+                            @else
+                                <div class="w-16 h-16 rounded-full bg-spinneys-green/10 text-spinneys-green flex items-center justify-center text-lg font-bold">
+                                    {{ strtoupper(substr($package->name, 0, 1)) }}
+                                </div>
                             @endif
+                            <div class="text-center">
+                                <div class="font-semibold text-gray-900 dark:text-gray-100">{{ $package->name }}</div>
+                                <div class="text-xs text-gray-500">Min: AED {{ number_format($package->min_amount, 2) }}</div>
+                                <div class="text-xs text-gray-500">Max: AED {{ number_format($package->max_amount, 2) }}</div>
+                                <div class="text-xs text-spinneys-green mt-1">{{ $package->daily_interest_rate }}% daily • {{ $package->duration_days }} days</div>
+                            </div>
                         </button>
-                    @endforeach
+                    @empty
+                        <div class="col-span-full text-center text-sm text-gray-500">
+                            No packages available yet.
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -257,17 +271,30 @@
 
     @push('scripts')
     <script>
+        let lastFocusedElement = null;
+
+        function focusFirstElement(modal) {
+            const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusable) {
+                focusable.focus();
+            }
+        }
+
         function openDepositModal() {
             const modal = document.getElementById('depositModal');
             if (!modal) {
                 return;
             }
 
+            lastFocusedElement = document.activeElement;
+
             modal.classList.add('is-active');
             modal.classList.remove('hidden');
             modal.style.display = 'block';
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
+
+            focusFirstElement(modal);
         }
 
         function closeDepositModal() {
@@ -276,6 +303,9 @@
                 return;
             }
 
+            if (lastFocusedElement instanceof HTMLElement) {
+                lastFocusedElement.focus();
+            }
             modal.classList.remove('is-active');
             modal.classList.add('hidden');
             modal.style.display = 'none';
@@ -288,16 +318,22 @@
             if (!modal) {
                 return;
             }
+            lastFocusedElement = document.activeElement;
             modal.classList.remove('hidden');
             modal.style.display = 'block';
             modal.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
+
+            focusFirstElement(modal);
         }
 
         function closeFaqModal() {
             const modal = document.getElementById('faqModal');
             if (!modal) {
                 return;
+            }
+            if (lastFocusedElement instanceof HTMLElement) {
+                lastFocusedElement.focus();
             }
             modal.classList.add('hidden');
             modal.style.display = 'none';

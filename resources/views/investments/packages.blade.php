@@ -69,8 +69,8 @@
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                 </svg>
                                 <span class="text-gray-700 dark:text-gray-300">
-                                    <span class="font-semibold">${{ number_format($package->min_amount, 0) }}</span> -
-                                    <span class="font-semibold">${{ number_format($package->max_amount, 0) }}</span> investment range
+                                    <span class="font-semibold">AED {{ number_format($package->min_amount, 0) }}</span> -
+                                    <span class="font-semibold">AED {{ number_format($package->max_amount, 0) }}</span> investment range
                                 </span>
                             </div>
                             <div class="flex items-center text-sm">
@@ -102,18 +102,18 @@
 
                         <!-- Expected Return Example -->
                         <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
-                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Example: ${{ number_format($package->min_amount) }} Investment</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Example: AED {{ number_format($package->min_amount) }} Investment</div>
                             <div class="flex justify-between items-center">
                                 <div>
                                     <div class="text-xs text-gray-500">Total Return</div>
                                     <div class="text-lg font-bold text-spinneys-green">
-                                        ${{ number_format($package->calculateTotalReturn($package->min_amount), 2) }}
+                                        AED {{ number_format($package->calculateTotalReturn($package->min_amount), 2) }}
                                     </div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-xs text-gray-500">Total Profit</div>
                                     <div class="text-lg font-bold text-spinneys-gold">
-                                        ${{ number_format($package->calculateTotalReturn($package->min_amount) - $package->min_amount, 2) }}
+                                        AED {{ number_format($package->calculateTotalReturn($package->min_amount) - $package->min_amount, 2) }}
                                     </div>
                                 </div>
                             </div>

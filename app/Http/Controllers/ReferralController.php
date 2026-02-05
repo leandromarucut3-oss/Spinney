@@ -11,7 +11,7 @@ class ReferralController extends Controller
         $user = auth()->user();
 
         $referrals = $user->referrals()
-            ->with('referredUser')
+            ->with('referred')
             ->latest()
             ->get();
 

@@ -26,6 +26,13 @@ class InvestmentController extends Controller
 
     public function invest(Request $request, InvestmentPackage $package)
     {
+        if ($request->filled('amount')) {
+            $request->merge([
+                'amount' => app(\App\Services\CurrencyService::class)
+                    ->convertToBase((float) $request->input('amount')),
+            ]);
+        }
+
         $request->validate([
             'amount' => [
                 'required',
@@ -101,6 +108,76 @@ class InvestmentController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('investments.index', compact('investments'));
+        $packages = InvestmentPackage::where('is_active', true)
+            ->orderBy('min_amount')
+            ->get();
+
+        return view('investments.index', compact('investments', 'packages'));
+    }
+
+    public function upgrade(Request $request, InvestmentPackage $package)
+    {
+        $user = auth()->user();
+
+        $activeInvestments = $user->investments()
+            ->where('status', 'active')
+            ->with('package')
+            ->get();
+
+        if ($activeInvestments->isEmpty()) {
+            return back()->with('error', 'You have no active investments to upgrade.');
+        }
+
+        $totalAmount = $activeInvestments->sum('amount');
+
+        if ($totalAmount < $package->min_amount) {
+            return back()->with('error', 'Total active investments are below the minimum for this package.');
+        }
+
+        if ($totalAmount > $package->max_amount) {
+            return back()->with('error', 'Total active investments exceed the maximum for this package.');
+        }
+
+        DB::beginTransaction();
+        try {
+            if (! $package->decrementSlot()) {
+                DB::rollBack();
+                return back()->with('error', 'No slots available for this package.');
+            }
+
+            foreach ($activeInvestments as $investment) {
+                $investment->status = 'completed';
+                $investment->save();
+                $investment->package?->incrementSlot();
+            }
+
+            $dailyInterest = $package->calculateDailyInterest($totalAmount);
+            $totalReturn = $package->calculateTotalReturn($totalAmount);
+            $startDate = now();
+            $maturityDate = $startDate->copy()->addDays($package->duration_days);
+
+            $newInvestment = Investment::create([
+                'user_id' => $user->id,
+                'package_id' => $package->id,
+                'amount' => $totalAmount,
+                'daily_interest' => $dailyInterest,
+                'total_return' => $totalReturn,
+                'total_earned' => 0,
+                'duration_days' => $package->duration_days,
+                'start_date' => $startDate,
+                'maturity_date' => $maturityDate,
+                'status' => 'active',
+            ]);
+
+            event(new InvestmentCreated($newInvestment));
+
+            DB::commit();
+
+            return back()->with('success', 'Investments upgraded successfully! Receipt #' . $newInvestment->receipt_number);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Investment upgrade failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to upgrade investments. Please try again.');
+        }
     }
 }

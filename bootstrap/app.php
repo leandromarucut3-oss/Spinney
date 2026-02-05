@@ -21,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\CheckSuspended::class,
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'register',
+            'register/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

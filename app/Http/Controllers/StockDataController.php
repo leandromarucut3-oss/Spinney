@@ -10,16 +10,28 @@ use Illuminate\Support\Facades\Log;
 class StockDataController extends Controller
 {
     /**
-     * Get real-time stock data from Alpha Vantage API
+     * Get stock data from Yahoo Finance
      */
-    public function getStockData()
+    public function getStockData(Request $request)
     {
+        $symbol = strtoupper((string) $request->query('symbol', env('STOCK_SYMBOL', 'SPINNEYS.AE')));
+        $allowedSymbols = [
+            'SPINNEYS.AE',
+            'AYALY',
+        ];
+
+        if (!in_array($symbol, $allowedSymbols, true)) {
+            return response()->json([
+                'error' => 'Unsupported symbol.'
+            ], 422);
+        }
+
         // Cache key for the stock data
-        $cacheKey = 'stock_data_' . now()->format('Y-m-d-H-i');
+        $cacheKey = 'stock_data_' . $symbol . '_' . now()->format('Y-m-d-H-i');
 
         // Cache for 5 minutes to match update frequency
-        $data = Cache::remember($cacheKey, 300, function () {
-            return $this->fetchFromAlphaVantage();
+        $data = Cache::remember($cacheKey, 300, function () use ($symbol) {
+            return $this->fetchFromYahooFinance($symbol);
         });
 
         return response()->json($data);
@@ -31,8 +43,8 @@ class StockDataController extends Controller
      */
     private function generateStockData()
     {
-        $basePrice = 125.50; // Starting price for Spinneys stock
-        $volatility = 0.015; // 1.5% volatility (realistic for stocks)
+        $basePrice = (float) env('STOCK_BASE_PRICE', 1.55); // Starting price for Spinneys stock
+        $volatility = 0.003; // Lower volatility for a low-priced stock
 
         // Generate candlestick data for the last 24 hours (5-minute intervals)
         $candlesticks = [];
@@ -90,14 +102,22 @@ class StockDataController extends Controller
         $change = $currentPrice - $openPrice;
         $changePercent = ($change / $openPrice) * 100;
 
+        $series = array_map(function ($candle) {
+            return [
+                'x' => $candle['x'],
+                'y' => $candle['y'][3],
+            ];
+        }, $candlesticks);
+
         return [
-            'symbol' => 'SPINNEYS',
+            'symbol' => strtoupper(env('STOCK_SYMBOL', 'SPINNEYS')),
             'currentPrice' => round($currentPrice, 2),
             'change' => round($change, 2),
             'changePercent' => round($changePercent, 2),
             'candlesticks' => $candlesticks,
+            'series' => $series,
             'lastUpdate' => now()->toIso8601String(),
-            'source' => 'Simulated (Premium API required for real data)'
+            'source' => 'Simulated (Spinneys base price)'
         ];
     }
 
@@ -107,7 +127,7 @@ class StockDataController extends Controller
     private function fetchFromAlphaVantage()
     {
         $apiKey = env('ALPHAVANTAGE_API_KEY');
-        $symbol = env('STOCK_SYMBOL', 'AAPL'); // Default to Apple stock
+        $symbol = env('STOCK_SYMBOL', 'SPINNEYS'); // Default to Spinneys
 
         try {
             $url = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={$symbol}&interval=5min&apikey={$apiKey}";
@@ -178,6 +198,80 @@ class StockDataController extends Controller
             ]);
 
             // Fallback to simulated data on error
+            return $this->generateStockData();
+        }
+    }
+
+    /**
+     * Fetch stock data from Yahoo Finance chart endpoint
+     */
+    private function fetchFromYahooFinance(string $symbol)
+    {
+        try {
+            $response = Http::timeout(10)->get(
+                "https://query1.finance.yahoo.com/v8/finance/chart/{$symbol}",
+                [
+                    'range' => '6mo',
+                    'interval' => '1d',
+                    'includePrePost' => 'false',
+                    'events' => 'div,splits',
+                ]
+            );
+
+            $data = $response->json();
+            $result = $data['chart']['result'][0] ?? null;
+
+            if (!$result || empty($result['timestamp']) || empty($result['indicators']['quote'][0]['close'])) {
+                Log::warning('Yahoo Finance returned no data', ['symbol' => $symbol]);
+                return $this->generateStockData();
+            }
+
+            $timestamps = $result['timestamp'];
+            $closes = $result['indicators']['quote'][0]['close'];
+
+            $series = [];
+            $firstClose = null;
+            $lastClose = null;
+
+            foreach ($timestamps as $index => $timestamp) {
+                $close = $closes[$index] ?? null;
+                if ($close === null) {
+                    continue;
+                }
+
+                if ($firstClose === null) {
+                    $firstClose = $close;
+                }
+                $lastClose = $close;
+
+                $series[] = [
+                    'x' => $timestamp * 1000,
+                    'y' => round((float) $close, 4),
+                ];
+            }
+
+            if ($firstClose === null || $lastClose === null) {
+                return $this->generateStockData();
+            }
+
+            $change = $lastClose - $firstClose;
+            $changePercent = $firstClose != 0 ? ($change / $firstClose) * 100 : 0;
+
+            return [
+                'symbol' => $symbol,
+                'currentPrice' => round((float) $lastClose, 4),
+                'change' => round((float) $change, 4),
+                'changePercent' => round((float) $changePercent, 2),
+                'series' => $series,
+                'lastUpdate' => now()->toIso8601String(),
+                'source' => 'Yahoo Finance',
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error fetching stock data from Yahoo Finance', [
+                'symbol' => $symbol,
+                'error' => $e->getMessage(),
+            ]);
+
             return $this->generateStockData();
         }
     }

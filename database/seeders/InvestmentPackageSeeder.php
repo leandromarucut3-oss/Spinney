@@ -14,20 +14,45 @@ class InvestmentPackageSeeder extends Seeder
     {
         // Investment packages - Add your plans here
         $packages = [
-            // Example format:
-            // [
-            //     'name' => 'Plan Name',
-            //     'description' => 'Plan description',
-            //     'image' => 'image-filename.jpg',
-            //     'min_amount' => 100.00,
-            //     'max_amount' => 999.99,
-            //     'daily_interest_rate' => 1.5,
-            //     'duration_days' => 30,
-            //     'total_slots' => 100,
-            //     'available_slots' => 100,
-            //     'is_active' => true,
-            //     'tier_required' => 'basic', // basic, silver, gold, platinum
-            // ],
+            [
+                'name' => 'Basic',
+                'description' => 'Entry plan for new investors with steady daily returns.',
+                'image' => 'Baic.jpeg',
+                'min_amount' => 500.00,
+                'max_amount' => 2499.00,
+                'daily_interest_rate' => 0.5,
+                'duration_days' => 30,
+                'total_slots' => 500,
+                'available_slots' => 500,
+                'is_active' => true,
+                'tier_required' => 'basic',
+            ],
+            [
+                'name' => 'Standard',
+                'description' => 'Balanced plan with higher daily interest for growing portfolios.',
+                'image' => 'Standard.jpeg',
+                'min_amount' => 2500.00,
+                'max_amount' => 24900.00,
+                'daily_interest_rate' => 0.7,
+                'duration_days' => 30,
+                'total_slots' => 300,
+                'available_slots' => 300,
+                'is_active' => true,
+                'tier_required' => 'silver',
+            ],
+            [
+                'name' => 'VIP',
+                'description' => 'Exclusive plan for premium investors with top-tier daily returns.',
+                'image' => 'VIP.jpeg',
+                'min_amount' => 25000.00,
+                'max_amount' => 25000.00,
+                'daily_interest_rate' => 0.9,
+                'duration_days' => 30,
+                'total_slots' => 100,
+                'available_slots' => 100,
+                'is_active' => true,
+                'tier_required' => 'platinum',
+            ],
         ];
 
         foreach ($packages as $packageData) {

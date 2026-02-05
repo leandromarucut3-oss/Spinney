@@ -8,18 +8,25 @@
                 <div class="bg-gradient-to-br from-spinneys-green to-spinneys-green-800 rounded-xl shadow-lg p-6 text-white">
                     <div class="flex items-center justify-between mb-4">
                         <div class="text-sm font-medium opacity-90">Available Balance</div>
-                        <svg class="w-8 h-8 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full border border-white/40 text-xs font-semibold opacity-90">@currencyCode</span>
                     </div>
-                    <div class="text-4xl font-bold mb-2">${{ number_format(Auth::user()->balance, 2) }}</div>
+                    <div class="text-4xl font-bold mb-2">@money(Auth::user()->balance)</div>
+                    @php
+                        $hasBankInfo = Auth::user()->hasBankInfo();
+                    @endphp
                     <div class="flex space-x-3">
                         <a href="{{ route('deposits.create') }}" class="flex-1 text-center bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-xs font-semibold transition">
                             Buy Shares
                         </a>
-                        <a href="{{ route('withdrawals.create') }}" class="flex-1 text-center bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-xs font-semibold transition">
-                            Withdraw
-                        </a>
+                        @if($hasBankInfo)
+                            <a href="{{ route('withdrawals.create') }}" class="flex-1 text-center bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-xs font-semibold transition">
+                                Withdraw
+                            </a>
+                        @else
+                            <a href="{{ route('profile.edit') }}" class="flex-1 text-center bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg text-xs font-semibold transition">
+                                Add Bank Info
+                            </a>
+                        @endif
                     </div>
                 </div>
 
@@ -34,7 +41,7 @@
                         </div>
                     </div>
                     <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                        ${{ number_format(Auth::user()->investments()->where('status', 'active')->sum('amount'), 2) }}
+                        @money(Auth::user()->investments()->where('status', 'active')->sum('amount'))
                     </div>
                     <div class="text-xs text-gray-500">
                         {{ Auth::user()->investments()->where('status', 'active')->count() }} active investment(s)
@@ -52,186 +59,55 @@
                         </div>
                     </div>
                     <div class="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                        ${{ number_format(Auth::user()->investments()->sum('total_earned'), 2) }}
+                        @money(Auth::user()->interestLogs()->where('status', 'processed')->sum('interest_amount'))
                     </div>
                     <div class="text-xs text-gray-500">
-                        Lifetime interest earned
+                        Interest Earned
                     </div>
                 </div>
             </div>
 
-            <!-- Live Stock Market Chart -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Spinneys Stock Market</h3>
-                        <p class="text-sm text-gray-500">Real-time candlestick chart • Updates every 5 minutes</p>
+            <!-- Stock Market Charts (Swipe) -->
+            <div class="relative">
+                <div class="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 -mx-2 px-2 [scrollbar-width:none] [-ms-overflow-style:none]" style="scrollbar-width: none; -ms-overflow-style: none;">
+                    <!-- Spinneys Stock Market -->
+                    <div id="stock-spinneys" class="min-w-full snap-center bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Spinneys Stock Market</h3>
+                                <p class="text-sm text-gray-500">Yahoo Finance data</p>
+                            </div>
+                            <a href="https://finance.yahoo.com/quote/SPINNEYS.AE/chart?p=SPINNEYS.AE" target="_blank" rel="noopener" class="text-xs text-spinneys-green hover:text-spinneys-green-700 font-semibold">
+                                Open Yahoo Finance
+                            </a>
+                        </div>
+                        <div class="h-[260px]">
+                            <canvas id="spinneysChart" class="w-full h-full"></canvas>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white" id="current-price">--</div>
-                        <div class="text-sm" id="price-change">
-                            <span class="text-gray-500">Loading...</span>
+
+                    <!-- Ayala Corporation Stock Price -->
+                    <div id="stock-ayala" class="min-w-full snap-center bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Ayala Corporation Stock Price</h3>
+                                <p class="text-sm text-gray-500">Yahoo Finance data</p>
+                            </div>
+                            <a href="https://finance.yahoo.com/quote/AYALY/chart?p=AYALY" target="_blank" rel="noopener" class="text-xs text-spinneys-green hover:text-spinneys-green-700 font-semibold">
+                                Open Yahoo Finance
+                            </a>
+                        </div>
+                        <div class="h-[260px]">
+                            <canvas id="ayalaChart" class="w-full h-full"></canvas>
                         </div>
                     </div>
                 </div>
-                <div id="stock-chart" class="w-full" style="height: 400px;"></div>
+
+                <div class="flex items-center justify-center gap-2">
+                    <a href="#stock-spinneys" class="w-2.5 h-2.5 rounded-full bg-gray-300 hover:bg-spinneys-green transition" aria-label="Spinneys stock"></a>
+                    <a href="#stock-ayala" class="w-2.5 h-2.5 rounded-full bg-gray-300 hover:bg-spinneys-green transition" aria-label="Ayala stock"></a>
+                </div>
             </div>
-
-            @push('scripts')
-            <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-            <script>
-                let stockChart;
-                let updateInterval;
-
-                async function fetchStockData() {
-                    try {
-                        const response = await fetch('/api/stock-data', {
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Accept': 'application/json'
-                            }
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-
-                        const data = await response.json();
-                        console.log('Stock data received:', data);
-                        return data;
-                    } catch (error) {
-                        console.error('Error fetching stock data:', error);
-                        return null;
-                    }
-                }
-
-                function updatePriceDisplay(currentPrice, change, changePercent) {
-                    const priceElement = document.getElementById('current-price');
-                    const changeElement = document.getElementById('price-change');
-
-                    priceElement.textContent = `$${currentPrice.toFixed(2)}`;
-
-                    const isPositive = change >= 0;
-                    const arrow = isPositive ? '↑' : '↓';
-                    const colorClass = isPositive ? 'text-green-600' : 'text-red-600';
-
-                    changeElement.innerHTML = `<span class="${colorClass} font-semibold">${arrow} $${Math.abs(change).toFixed(2)} (${changePercent.toFixed(2)}%)</span>`;
-                }
-
-                async function initChart() {
-                    console.log('Initializing stock chart...');
-                    const data = await fetchStockData();
-
-                    if (!data || !data.candlesticks || data.candlesticks.length === 0) {
-                        console.error('No stock data available');
-                        document.getElementById('price-change').innerHTML = '<span class="text-red-600">Error loading chart data</span>';
-                        return;
-                    }
-
-                    console.log(`Loaded ${data.candlesticks.length} candlesticks`);
-
-                    const options = {
-                        series: [{
-                            name: 'Spinneys',
-                            data: data.candlesticks
-                        }],
-                        chart: {
-                            type: 'candlestick',
-                            height: 400,
-                            toolbar: {
-                                show: true,
-                                tools: {
-                                    download: true,
-                                    selection: true,
-                                    zoom: true,
-                                    zoomin: true,
-                                    zoomout: true,
-                                    pan: true,
-                                    reset: true
-                                }
-                            },
-                            animations: {
-                                enabled: true,
-                                easing: 'easeinout',
-                                speed: 800
-                            }
-                        },
-                        title: {
-                            text: 'SPINNEYS - 5 Minute Intervals',
-                            align: 'left',
-                            style: {
-                                color: document.documentElement.classList.contains('dark') ? '#fff' : '#111'
-                            }
-                        },
-                        plotOptions: {
-                            candlestick: {
-                                colors: {
-                                    upward: '#10b981',
-                                    downward: '#ef4444'
-                                },
-                                wick: {
-                                    useFillColor: true
-                                }
-                            }
-                        },
-                        xaxis: {
-                            type: 'datetime',
-                            labels: {
-                                style: {
-                                    colors: document.documentElement.classList.contains('dark') ? '#9ca3af' : '#6b7280'
-                                }
-                            }
-                        },
-                        yaxis: {
-                            tooltip: {
-                                enabled: true
-                            },
-                            labels: {
-                                formatter: function(value) {
-                                    return '$' + value.toFixed(2);
-                                },
-                                style: {
-                                    colors: document.documentElement.classList.contains('dark') ? '#9ca3af' : '#6b7280'
-                                }
-                            }
-                        },
-                        grid: {
-                            borderColor: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb'
-                        },
-                        tooltip: {
-                            theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
-                        }
-                    };
-
-                    stockChart = new ApexCharts(document.querySelector("#stock-chart"), options);
-                    stockChart.render();
-
-                    // Update price display
-                    updatePriceDisplay(data.currentPrice, data.change, data.changePercent);
-
-                    // Set up auto-refresh every 5 minutes
-                    updateInterval = setInterval(async () => {
-                        const newData = await fetchStockData();
-                        if (newData) {
-                            stockChart.updateSeries([{
-                                data: newData.candlesticks
-                            }]);
-                            updatePriceDisplay(newData.currentPrice, newData.change, newData.changePercent);
-                        }
-                    }, 5 * 60 * 1000); // 5 minutes
-                }
-
-                // Initialize chart when page loads
-                document.addEventListener('DOMContentLoaded', initChart);
-
-                // Clean up interval when page unloads
-                window.addEventListener('beforeunload', () => {
-                    if (updateInterval) {
-                        clearInterval(updateInterval);
-                    }
-                });
-            </script>
-            @endpush
 
             <div class="grid lg:grid-cols-3 gap-6">
                 <!-- Active Investments -->
@@ -253,7 +129,7 @@
                                         <div class="text-sm text-gray-500">#{{ $investment->receipt_number }}</div>
                                     </div>
                                     <div class="text-right">
-                                        <div class="font-bold text-gray-900 dark:text-white">${{ number_format($investment->amount, 2) }}</div>
+                                        <div class="font-bold text-gray-900 dark:text-white">@money($investment->amount)</div>
                                         <div class="text-xs text-spinneys-green">{{ $investment->package->daily_interest_rate }}% daily</div>
                                     </div>
                                 </div>
@@ -268,7 +144,7 @@
                                     </div>
                                     <div>
                                         <div class="text-xs text-gray-500">Earned</div>
-                                        <div class="text-sm font-medium text-spinneys-gold">${{ number_format($investment->total_earned, 2) }}</div>
+                                        <div class="text-sm font-medium text-spinneys-gold">@money($investment->total_earned)</div>
                                     </div>
                                 </div>
                                 <!-- Progress Bar -->
@@ -313,7 +189,7 @@
                             </svg>
                         </div>
                         <div class="text-3xl font-bold mb-3">
-                            ${{ number_format(Auth::user()->referrals()->sum('total_commission'), 2) }}
+                            @money(Auth::user()->referrals()->sum('total_commission'))
                         </div>
                         <div class="text-sm opacity-90 mb-4">
                             From {{ Auth::user()->referredUsers()->count() }} referred user(s)
@@ -351,7 +227,7 @@
                                     </div>
                                 </div>
                                 <div class="text-sm font-semibold {{ $transaction->isCredit() ? 'text-green-600' : 'text-red-600' }}">
-                                    {{ $transaction->isCredit() ? '+' : '-' }}${{ number_format($transaction->amount, 2) }}
+                                    {{ $transaction->isCredit() ? '+' : '-' }} @money($transaction->amount)
                                 </div>
                             </div>
                             @empty
@@ -367,3 +243,79 @@
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+    <script>
+        const createStockChart = async (canvasId, symbol) => {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/stock-data?symbol=${encodeURIComponent(symbol)}`, {
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+
+                if (!data || !Array.isArray(data.series)) {
+                    throw new Error('No chart data');
+                }
+
+                const labels = data.series.map(point => {
+                    const date = new Date(point.x);
+                    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                });
+                const values = data.series.map(point => point.y);
+
+                new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: symbol,
+                            data: values,
+                            borderColor: '#0B7D3B',
+                            backgroundColor: 'rgba(11, 125, 59, 0.08)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.25,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: (context) => `${symbol}: ${context.parsed.y}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { maxTicksLimit: 6 }
+                            },
+                            y: {
+                                grid: { color: 'rgba(148, 163, 184, 0.2)' },
+                                ticks: { maxTicksLimit: 5 }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                canvas.parentElement.innerHTML = '<div class="h-full flex items-center justify-center text-sm text-gray-500">Unable to load chart data.</div>';
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createStockChart('spinneysChart', 'SPINNEYS.AE');
+            createStockChart('ayalaChart', 'AYALY');
+        });
+    </script>
+@endpush

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
@@ -24,8 +25,12 @@ class TransactionController extends Controller
             $query->whereDate('created_at', '<=', $request->to);
         }
 
+        $netTotal = (clone $query)
+            ->selectRaw('SUM(CASE WHEN balance_after > balance_before THEN amount ELSE -amount END) as net_total')
+            ->value('net_total');
+
         $transactions = $query->paginate(20);
 
-        return view('transactions.index', compact('transactions'));
+        return view('transactions.index', compact('transactions', 'netTotal'));
     }
 }

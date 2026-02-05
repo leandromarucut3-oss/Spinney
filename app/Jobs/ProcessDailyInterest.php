@@ -20,27 +20,28 @@ class ProcessDailyInterest implements ShouldQueue
     {
         $processedCount = 0;
         $errorCount = 0;
+        $today = now()->toDateString();
 
         Log::info('Starting daily interest processing');
 
         $activeInvestments = Investment::where('status', 'active')
-            ->where('start_date', '<=', now()->toDateString())
-            ->where('maturity_date', '>', now()->toDateString())
+            ->where('start_date', '<=', now())
+            ->where('maturity_date', '>', now())
             ->with(['user', 'package'])
             ->get();
 
         foreach ($activeInvestments as $investment) {
             try {
+                $alreadyProcessed = InterestLog::where('investment_id', $investment->id)
+                    ->where('calculation_date', $today)
+                    ->where('status', 'processed')
+                    ->exists();
+
+                if ($alreadyProcessed) {
+                    continue;
+                }
+
                 DB::transaction(function () use ($investment) {
-                    // Check if interest already calculated for today
-                    $alreadyProcessed = InterestLog::where('investment_id', $investment->id)
-                        ->where('calculation_date', now()->toDateString())
-                        ->exists();
-
-                    if ($alreadyProcessed) {
-                        return;
-                    }
-
                     $user = $investment->user;
                     $balanceBefore = $user->balance;
 

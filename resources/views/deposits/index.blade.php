@@ -43,7 +43,7 @@
                                                 <span class="text-xs text-gray-500 dark:text-gray-400">{{ $deposit->created_at->format('h:i A') }}</span>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                ${{ number_format($deposit->amount, 2) }}
+                                                AED {{ number_format($deposit->amount, 2) }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                                                 {{ ucwords(str_replace('_', ' ', $deposit->payment_method)) }}

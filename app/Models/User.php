@@ -23,11 +23,17 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'pin',
         'phone',
         'balance',
+        'bank_name',
+        'bank_account_name',
+        'bank_account_number',
+        'bank_iban',
+        'bank_swift_code',
         'referral_code',
         'referred_by',
         'tier',
@@ -75,7 +81,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         static::creating(function ($user) {
             if (empty($user->referral_code)) {
-                $user->referral_code = strtoupper(Str::random(8));
+                $user->referral_code = $user->username;
             }
         });
     }
@@ -88,6 +94,14 @@ class User extends Authenticatable implements MustVerifyEmail
         if ($value) {
             $this->attributes['pin'] = bcrypt($value);
         }
+    }
+
+    /**
+     * Normalize username before saving
+     */
+    public function setUsernameAttribute($value): void
+    {
+        $this->attributes['username'] = $value ? Str::lower(trim((string) $value)) : null;
     }
 
     /**
@@ -309,8 +323,39 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
-        $tierOrder = ['basic' => 0, 'silver' => 1, 'gold' => 2, 'platinum' => 3];
-        return $tierOrder[$this->tier] >= $tierOrder[$package->tier_required];
+        return true;
+    }
+
+    /**
+     * Check if user has bank details on file
+     */
+    public function hasBankInfo(): bool
+    {
+        return !empty($this->bank_name)
+            && !empty($this->bank_account_name)
+            && !empty($this->bank_account_number);
+    }
+
+    /**
+     * Build a bank account summary for withdrawal records
+     */
+    public function getBankAccountSummary(): string
+    {
+        $parts = [
+            'Bank: ' . $this->bank_name,
+            'Account Name: ' . $this->bank_account_name,
+            'Account Number: ' . $this->bank_account_number,
+        ];
+
+        if (!empty($this->bank_iban)) {
+            $parts[] = 'IBAN: ' . $this->bank_iban;
+        }
+
+        if (!empty($this->bank_swift_code)) {
+            $parts[] = 'SWIFT: ' . $this->bank_swift_code;
+        }
+
+        return implode(' | ', $parts);
     }
 }
 

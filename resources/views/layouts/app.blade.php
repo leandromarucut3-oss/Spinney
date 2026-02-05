@@ -33,6 +33,13 @@
             </main>
         </div>
 
+        <script>
+            window.APP_CURRENCY = {
+                code: "{{ app(\App\Services\CurrencyService::class)->code() }}",
+                rate: {{ app(\App\Services\CurrencyService::class)->rate() }}
+            };
+        </script>
+
         @stack('scripts')
     </body>
 </html>

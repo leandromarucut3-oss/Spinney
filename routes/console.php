@@ -10,7 +10,7 @@ Artisan::command('inspire', function () {
 
 // Schedule daily interest processing
 Schedule::job(new \App\Jobs\ProcessDailyInterest)
-    ->dailyAt('00:30')
+    ->daily()
     ->name('process-daily-interest')
     ->withoutOverlapping();
 

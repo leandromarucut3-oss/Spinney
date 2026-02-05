@@ -57,7 +57,7 @@
                                     <div>
                                         <div class="font-semibold text-gray-900 dark:text-white">Investment Range</div>
                                         <div class="text-sm text-gray-600 dark:text-gray-400">
-                                            ${{ number_format($package->min_amount) }} - ${{ number_format($package->max_amount) }}
+                                            AED {{ number_format($package->min_amount) }} - AED {{ number_format($package->max_amount) }}
                                         </div>
                                     </div>
                                 </div>
@@ -70,17 +70,6 @@
                                     <div>
                                         <div class="font-semibold text-gray-900 dark:text-white">Duration</div>
                                         <div class="text-sm text-gray-600 dark:text-gray-400">{{ $package->duration_days }} days</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-start">
-                                    <div class="w-10 h-10 bg-spinneys-green/10 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
-                                        <svg class="w-5 h-5 text-spinneys-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-gray-900 dark:text-white">Tier Required</div>
-                                        <div class="text-sm text-gray-600 dark:text-gray-400 capitalize">{{ $package->tier_required }} tier</div>
                                     </div>
                                 </div>
                                 <div class="flex items-start">
@@ -113,7 +102,7 @@
                         }">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Investment Amount: $<span x-text="parseFloat(amount).toLocaleString()"></span>
+                                    Investment Amount: AED <span x-text="parseFloat(amount).toLocaleString()"></span>
                                 </label>
                                 <input type="range"
                                        x-model="amount"
@@ -122,23 +111,23 @@
                                        step="100"
                                        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                                 <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                    <span>${{ number_format($package->min_amount) }}</span>
-                                    <span>${{ number_format($package->max_amount) }}</span>
+                                    <span>AED {{ number_format($package->min_amount) }}</span>
+                                    <span>AED {{ number_format($package->max_amount) }}</span>
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-3 gap-4 pt-4 border-t">
                                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Daily Interest</div>
-                                    <div class="text-lg font-bold text-spinneys-green">$<span x-text="dailyInterest"></span></div>
+                                    <div class="text-lg font-bold text-spinneys-green">AED <span x-text="dailyInterest"></span></div>
                                 </div>
                                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Interest</div>
-                                    <div class="text-lg font-bold text-spinneys-gold">$<span x-text="parseFloat(totalInterest).toLocaleString()"></span></div>
+                                    <div class="text-lg font-bold text-spinneys-gold">AED <span x-text="parseFloat(totalInterest).toLocaleString()"></span></div>
                                 </div>
                                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                                     <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Return</div>
-                                    <div class="text-lg font-bold text-spinneys-green">$<span x-text="parseFloat(totalReturn).toLocaleString()"></span></div>
+                                    <div class="text-lg font-bold text-spinneys-green">AED <span x-text="parseFloat(totalReturn).toLocaleString()"></span></div>
                                 </div>
                             </div>
                         </div>
@@ -154,7 +143,7 @@
                         <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Your Available Balance</div>
                             <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                                ${{ number_format(Auth::user()->balance, 2) }}
+                                AED {{ number_format(Auth::user()->balance, 2) }}
                             </div>
                         </div>
 
@@ -167,7 +156,7 @@
                                 </label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-500">$</span>
+                                        <span class="text-gray-500">AED</span>
                                     </div>
                                     <input type="number"
                                            name="amount"
@@ -183,7 +172,7 @@
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                                 <p class="mt-1 text-xs text-gray-500">
-                                    Min: ${{ number_format($package->min_amount) }} | Max: ${{ number_format($package->max_amount) }}
+                                    Min: AED {{ number_format($package->min_amount) }} | Max: AED {{ number_format($package->max_amount) }}
                                 </p>
                             </div>
 
@@ -197,7 +186,7 @@
                                     @if($package->available_slots == 0)
                                         No slots available for this package
                                     @else
-                                        Your tier does not allow investment in this package
+                                        You are not eligible to invest in this package
                                     @endif
                                 </div>
                             @endif

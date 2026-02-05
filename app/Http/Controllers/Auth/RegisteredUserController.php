@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Events\UserRegistered as CustomUserRegistered;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,17 +31,29 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:'.User::class],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'referral_code' => ['required', 'string', 'exists:users,username'],
         ]);
+
+        $referrerId = User::where('username', $request->referral_code)->value('id');
+
+        if (! $referrerId) {
+            return back()->withErrors([
+                'referral_code' => 'Invalid referral code.',
+            ])->withInput();
+        }
 
         $user = User::create([
             'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'referred_by' => $referrerId,
+            'email_verified_at' => now(),
         ]);
-
-        event(new Registered($user));
+        event(new CustomUserRegistered($user));
 
         Auth::login($user);
 

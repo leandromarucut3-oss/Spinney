@@ -58,13 +58,18 @@ class Withdrawal extends Model
      */
     public function approve(User $admin): void
     {
-        // Deduct balance first
-        $this->user->deductBalance(
-            $this->amount,
-            'withdrawal',
-            "Withdrawal approved - {$this->withdrawal_method}",
-            $this
-        );
+        $alreadyDeducted = $this->transactions()
+            ->where('type', 'withdrawal_request')
+            ->exists();
+
+        if (! $alreadyDeducted) {
+            $this->user->deductBalance(
+                $this->amount,
+                'withdrawal_request',
+                'Withdrawal request submitted',
+                $this
+            );
+        }
 
         $this->status = 'approved';
         $this->approved_by = $admin->id;
@@ -77,6 +82,19 @@ class Withdrawal extends Model
      */
     public function reject(User $admin, string $notes = null): void
     {
+        $alreadyDeducted = $this->transactions()
+            ->where('type', 'withdrawal_request')
+            ->exists();
+
+        if ($alreadyDeducted) {
+            $this->user->addBalance(
+                $this->amount,
+                'withdrawal_rejected',
+                'Withdrawal rejected - funds returned',
+                $this
+            );
+        }
+
         $this->status = 'rejected';
         $this->approved_by = $admin->id;
         $this->approved_at = now();

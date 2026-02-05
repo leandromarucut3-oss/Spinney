@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -34,14 +35,15 @@ class RegisteredUserController extends Controller
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:'.User::class],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'referral_code' => ['required', 'string', 'exists:users,username'],
+            'referral_code' => ['required', 'string', 'max:50'],
         ]);
 
-        $referrerId = User::where('username', $request->referral_code)->value('id');
+        $referralInput = Str::lower(trim((string) $request->referral_code));
+        $referrerId = User::whereRaw('LOWER(username) = ?', [$referralInput])->value('id');
 
         if (! $referrerId) {
             return back()->withErrors([
-                'referral_code' => 'Invalid referral code.',
+                'referral_code' => 'The selected referral code is invalid. Enter the referrer’s username to create an account.',
             ])->withInput();
         }
 

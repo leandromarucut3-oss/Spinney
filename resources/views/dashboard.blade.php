@@ -75,15 +75,16 @@
                         <div class="flex justify-between items-center mb-4">
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Spinneys Stock Market</h3>
-                                <p class="text-sm text-gray-500">Yahoo Finance data</p>
+                                <p class="text-sm text-gray-500">TradingView chart</p>
                             </div>
-                            <a href="https://finance.yahoo.com/quote/SPINNEYS.AE/chart?p=SPINNEYS.AE" target="_blank" rel="noopener" class="text-xs text-spinneys-green hover:text-spinneys-green-700 font-semibold">
-                                Open Yahoo Finance
-                            </a>
                         </div>
-                        <div class="h-[260px]">
-                            <canvas id="spinneysChart" class="w-full h-full"></canvas>
-                        </div>
+                        <iframe
+                            src="https://s.tradingview.com/widgetembed/?symbol=DFM:SPINNEYS&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=f1f3f6&studies=[]&hideideas=1&theme=light&style=1&locale=en"
+                            style="width: 100%; height: 260px;"
+                            frameborder="0"
+                            allowtransparency="true"
+                            scrolling="no">
+                        </iframe>
                     </div>
 
                     <!-- Ayala Corporation Stock Price -->
@@ -91,15 +92,16 @@
                         <div class="flex justify-between items-center mb-4">
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Ayala Corporation Stock Price</h3>
-                                <p class="text-sm text-gray-500">Yahoo Finance data</p>
+                                <p class="text-sm text-gray-500">TradingView chart</p>
                             </div>
-                            <a href="https://finance.yahoo.com/quote/AYALY/chart?p=AYALY" target="_blank" rel="noopener" class="text-xs text-spinneys-green hover:text-spinneys-green-700 font-semibold">
-                                Open Yahoo Finance
-                            </a>
                         </div>
-                        <div class="h-[260px]">
-                            <canvas id="ayalaChart" class="w-full h-full"></canvas>
-                        </div>
+                        <iframe
+                            src="https://s.tradingview.com/widgetembed/?symbol=NYSE:AY&interval=D&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=f1f3f6&studies=[]&hideideas=1&theme=light&style=1&locale=en"
+                            style="width: 100%; height: 260px;"
+                            frameborder="0"
+                            allowtransparency="true"
+                            scrolling="no">
+                        </iframe>
                     </div>
                 </div>
 
@@ -244,78 +246,3 @@
     </div>
 </x-app-layout>
 
-@push('scripts')
-    <script>
-        const createStockChart = async (canvasId, symbol) => {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/stock-data?symbol=${encodeURIComponent(symbol)}`, {
-                    credentials: 'same-origin'
-                });
-                const data = await response.json();
-
-                if (!data || !Array.isArray(data.series)) {
-                    throw new Error('No chart data');
-                }
-
-                const labels = data.series.map(point => {
-                    const date = new Date(point.x);
-                    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                });
-                const values = data.series.map(point => point.y);
-
-                new Chart(canvas, {
-                    type: 'line',
-                    data: {
-                        labels,
-                        datasets: [{
-                            label: symbol,
-                            data: values,
-                            borderColor: '#0B7D3B',
-                            backgroundColor: 'rgba(11, 125, 59, 0.08)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0.25,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false,
-                                callbacks: {
-                                    label: (context) => `${symbol}: ${context.parsed.y}`
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                grid: { display: false },
-                                ticks: { maxTicksLimit: 6 }
-                            },
-                            y: {
-                                grid: { color: 'rgba(148, 163, 184, 0.2)' },
-                                ticks: { maxTicksLimit: 5 }
-                            }
-                        }
-                    }
-                });
-            } catch (error) {
-                canvas.parentElement.innerHTML = '<div class="h-full flex items-center justify-center text-sm text-gray-500">Unable to load chart data.</div>';
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            createStockChart('spinneysChart', 'SPINNEYS.AE');
-            createStockChart('ayalaChart', 'AYALY');
-        });
-    </script>
-@endpush

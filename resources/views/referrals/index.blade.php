@@ -24,9 +24,23 @@
                         </div>
                         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                             <div class="text-sm text-gray-500">Referral Link</div>
-                            <div class="text-sm text-gray-900 dark:text-gray-100 break-all">
-                                {{ url('/register') }}?ref={{ $user->referral_code }}
+                            <div class="mt-2 flex items-center gap-2">
+                                <input
+                                    id="referral-link"
+                                    type="text"
+                                    readonly
+                                    value="{{ url('/register') }}?ref={{ $user->referral_code }}"
+                                    class="flex-1 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-2 py-1"
+                                />
+                                <button
+                                    type="button"
+                                    id="copy-referral"
+                                    class="px-3 py-1.5 text-xs font-semibold rounded-md bg-spinneys-green text-white hover:bg-spinneys-green-700 transition"
+                                >
+                                    Copy
+                                </button>
                             </div>
+                            <div id="copy-feedback" class="mt-2 text-xs text-spinneys-green hidden">Copied!</div>
                         </div>
                     </div>
                 </div>
@@ -110,3 +124,45 @@
         </div>
     </div>
 </x-app-layout>
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const button = document.getElementById('copy-referral');
+            const input = document.getElementById('referral-link');
+            const feedback = document.getElementById('copy-feedback');
+
+            if (!button || !input) {
+                return;
+            }
+
+            button.addEventListener('click', async () => {
+                const text = input.value;
+                const originalText = button.textContent;
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(text);
+                    } else {
+                        input.select();
+                        document.execCommand('copy');
+                        input.setSelectionRange(0, 0);
+                    }
+                    if (feedback) {
+                        feedback.classList.remove('hidden');
+                        setTimeout(() => feedback.classList.add('hidden'), 1500);
+                    }
+                    button.textContent = 'Copied!';
+                    button.classList.add('bg-spinneys-gold', 'hover:bg-spinneys-gold-700');
+                    button.classList.remove('bg-spinneys-green', 'hover:bg-spinneys-green-700');
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('bg-spinneys-gold', 'hover:bg-spinneys-gold-700');
+                        button.classList.add('bg-spinneys-green', 'hover:bg-spinneys-green-700');
+                    }, 1500);
+                } catch (error) {
+                    // No-op
+                }
+            });
+        });
+    </script>
+@endpush

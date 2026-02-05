@@ -59,11 +59,11 @@
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Choose a package to start buying shares and set your investment amount</p>
 
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 px-3 sm:px-0">
                     @forelse($packages as $package)
                         <button type="button" data-open-deposit-modal data-package-id="{{ $package->id }}" data-min="{{ $package->min_amount }}" data-max="{{ $package->max_amount }}" class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 hover:border-spinneys-green transition-colors p-4 flex items-center justify-center">
                             @if($package->image)
-                                <img src="{{ asset($package->image) }}" alt="{{ $package->name }}" class="w-full h-auto object-contain">
+                                <img src="{{ asset($package->image) }}" alt="{{ $package->name }}" class="w-full h-auto object-contain drop-shadow-[0_18px_35px_rgba(0,0,0,0.18)]">
                             @endif
                         </button>
                     @empty
@@ -131,6 +131,26 @@
                             @error('payment_method')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
+                        </div>
+
+                        <!-- Bank Transfer QR Code -->
+                        <div id="bank-transfer-qr" class="hidden">
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
+                                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Bank Transfer QR Code</div>
+                                <div class="mt-3 flex items-center gap-4">
+                                    <div id="qr-loading" class="flex items-center gap-2 text-xs text-gray-500">
+                                        <span class="inline-block w-4 h-4 rounded-full border-2 border-gray-300 border-t-spinneys-green animate-spin"></span>
+                                        Generating QR code...
+                                    </div>
+                                    <img
+                                        id="qr-image"
+                                        src="{{ asset('unnamed (2).jpg') }}"
+                                        alt="Bank Transfer QR Code"
+                                        class="hidden w-28 h-28 rounded-md border border-gray-200 dark:border-gray-700 object-cover"
+                                    />
+                                </div>
+                                <div class="mt-2 text-xs text-gray-500">Scan to complete bank transfer.</div>
+                            </div>
                         </div>
 
                         <!-- Transaction Reference -->
@@ -336,6 +356,10 @@
             const activePackageIds = @json($activePackageIds);
             const upgradeButton = document.getElementById('upgrade-button');
             const upgradeForm = document.getElementById('upgrade-form');
+                const paymentMethod = document.getElementById('payment_method');
+                const bankTransferQr = document.getElementById('bank-transfer-qr');
+                const qrLoading = document.getElementById('qr-loading');
+                const qrImage = document.getElementById('qr-image');
 
             document.querySelectorAll('[data-open-faq-modal]').forEach(function (button) {
                 button.addEventListener('click', openFaqModal);
@@ -395,6 +419,27 @@
             document.querySelectorAll('[data-close-deposit-modal]').forEach(function (button) {
                 button.addEventListener('click', closeDepositModal);
             });
+
+            if (paymentMethod && bankTransferQr && qrLoading && qrImage) {
+                const showQr = () => {
+                    if (paymentMethod.value === 'bank_transfer') {
+                        bankTransferQr.classList.remove('hidden');
+                        qrLoading.classList.remove('hidden');
+                        qrImage.classList.add('hidden');
+                        setTimeout(() => {
+                            qrLoading.classList.add('hidden');
+                            qrImage.classList.remove('hidden');
+                        }, 800);
+                    } else {
+                        bankTransferQr.classList.add('hidden');
+                        qrLoading.classList.add('hidden');
+                        qrImage.classList.add('hidden');
+                    }
+                };
+
+                paymentMethod.addEventListener('change', showQr);
+                showQr();
+            }
 
             if (upgradeButton && upgradeForm) {
                 upgradeButton.addEventListener('click', function () {

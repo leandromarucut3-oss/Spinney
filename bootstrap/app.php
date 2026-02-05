@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'verified.user' => \App\Http\Middleware\EnsureUserIsVerified::class,
             'pin.verified' => \App\Http\Middleware\CheckPinVerification::class,
+            'nocache' => \App\Http\Middleware\NoCacheHeaders::class,
         ]);
 
         $middleware->web(append: [

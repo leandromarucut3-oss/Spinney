@@ -24,7 +24,7 @@ class DepositController extends Controller
     public function create()
     {
         $packages = \App\Models\InvestmentPackage::where('is_active', true)
-            ->orderBy('minimum_investment')
+            ->orderBy('min_amount')
             ->get();
 
         return view('deposits.create', compact('packages'));

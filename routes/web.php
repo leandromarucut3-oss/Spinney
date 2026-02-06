@@ -14,6 +14,19 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/favicon.ico', function () {
+    $path = public_path('SPINNEYS.AE-1e6e5338.png');
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+});
+
 Route::get('/dashboard', function () {
     if (auth()->user()?->is_admin) {
         return redirect()->route('admin.dashboard');

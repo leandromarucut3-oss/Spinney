@@ -6,6 +6,19 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        @php($faviconVersion = filemtime(public_path('SPINNEYS.AE-1e6e5338.png')))
+        <link rel="icon" type="image/png" href="{{ asset('SPINNEYS.AE-1e6e5338.png') }}?v={{ $faviconVersion }}">
+        <link rel="shortcut icon" type="image/png" href="{{ asset('SPINNEYS.AE-1e6e5338.png') }}?v={{ $faviconVersion }}">
+        <link rel="apple-touch-icon" href="{{ asset('SPINNEYS.AE-1e6e5338.png') }}?v={{ $faviconVersion }}">
+        <meta property="og:title" content="{{ config('app.name', 'Laravel') }}">
+        <meta property="og:description" content="{{ config('app.name', 'Laravel') }}">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image" content="{{ asset('s.png') }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ config('app.name', 'Laravel') }}">
+        <meta name="twitter:description" content="{{ config('app.name', 'Laravel') }}">
+        <meta name="twitter:image" content="{{ asset('s.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

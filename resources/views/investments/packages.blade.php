@@ -12,9 +12,7 @@
             <div class="bg-gradient-to-r from-spinneys-green to-spinneys-green-800 rounded-xl shadow-lg p-8 mb-6 text-white">
                 <div class="max-w-3xl">
                     <h1 class="text-3xl font-bold mb-3">Choose Your Investment Plan</h1>
-                    <p class="text-gray-100 text-lg">
-                        Select a package that aligns with your financial goals. All investments earn automated daily interest and are backed by our secure platform.
-                    </p>
+                    <p class="text-gray-100 text-lg">Spinneys</p>
                     <div class="mt-6 grid grid-cols-3 gap-6">
                         <div class="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
                             <div class="text-2xl font-bold text-spinneys-gold mb-1">0.5% - 0.9%</div>

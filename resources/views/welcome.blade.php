@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SPINNEYS - Secure Investment Platform</title>
+    <title>SPINNEYS</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -155,7 +155,7 @@
             <div class="grid md:grid-cols-4 gap-8 mb-8">
                 <div>
                     <img src="{{ asset('SPINNEYS.AE-1e6e5338.png') }}" alt="SPINNEYS" class="h-8 mb-4">
-                    <p class="text-gray-400 text-sm">Secure investment platform for building your financial future</p>
+                    <p class="text-gray-400 text-sm">Spinneys</p>
                 </div>
                 <div>
                     <h4 class="text-white font-semibold mb-4">Platform</h4>

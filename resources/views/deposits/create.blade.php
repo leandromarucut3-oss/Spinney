@@ -86,7 +86,7 @@
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
             <!-- Modal panel -->
-            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full max-w-[calc(100%-2rem)] sm:max-w-3xl sm:w-full">
                 <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="flex justify-between items-start mb-4">
                         <div>
@@ -136,8 +136,8 @@
                         <!-- Bank Transfer QR Code -->
                         <div id="bank-transfer-qr" class="hidden">
                             <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
-                                <div class="text-sm font-medium text-gray-700 dark:text-gray-300">Bank Transfer QR Code</div>
-                                <div class="mt-3 flex items-center gap-4">
+                                <div class="text-sm font-medium text-gray-700 dark:text-gray-300 text-center">Bank Transfer QR Code</div>
+                                <div class="mt-3 flex flex-col items-center gap-4">
                                     <div id="qr-loading" class="flex items-center gap-2 text-xs text-gray-500">
                                         <span class="inline-block w-4 h-4 rounded-full border-2 border-gray-300 border-t-spinneys-green animate-spin"></span>
                                         Generating QR code...
@@ -149,7 +149,7 @@
                                         class="hidden w-40 h-40 sm:w-32 sm:h-32 rounded-md border border-gray-200 dark:border-gray-700 object-cover"
                                     />
                                 </div>
-                                <div class="mt-2 text-xs text-gray-500">Scan to complete bank transfer.</div>
+                                <div class="mt-2 text-xs text-gray-500 text-center">Scan to complete bank transfer.</div>
                             </div>
                         </div>
 

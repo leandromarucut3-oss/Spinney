@@ -1,8 +1,8 @@
-# SPINNEYS - Production-Ready Financial Investment Platform
+# SPINNEYS
 
 ![SPINNEYS](https://via.placeholder.com/800x150/0B4C2D/D4AF37?text=SPINNEYS+FINANCIAL+PLATFORM)
 
-A secure, scalable, enterprise-grade financial investment platform built with Laravel 12, featuring automated daily interest calculations, multi-level referral systems, and comprehensive admin management.
+Spinneys
 
 ## 🎯 Features
 

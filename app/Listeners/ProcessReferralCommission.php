@@ -22,29 +22,20 @@ class ProcessReferralCommission
                 // Get all referrals for this user
                 $referrals = Referral::where('referred_id', $investor->id)
                     ->where('status', 'active')
+                    ->where('level', 1)
                     ->with('referrer')
                     ->get();
 
-                // Commission rates by level
-                $commissionRates = [
-                    1 => 5.0,  // 5% for direct referrals
-                    2 => 2.0,  // 2% for level 2
-                    3 => 1.0,  // 1% for level 3
-                ];
-
                 foreach ($referrals as $referral) {
-                    $rate = $commissionRates[$referral->level] ?? 0;
+                    $rate = 5.0; // Direct referral only
+                    $commissionAmount = ($investment->amount * $rate) / 100;
 
-                    if ($rate > 0) {
-                        $commissionAmount = ($investment->amount * $rate) / 100;
+                    $referral->addCommission(
+                        $commissionAmount,
+                        "Direct referral commission from {$investor->name}'s investment {$investment->receipt_number}"
+                    );
 
-                        $referral->addCommission(
-                            $commissionAmount,
-                            "Level {$referral->level} commission from {$investor->name}'s investment {$investment->receipt_number}"
-                        );
-
-                        Log::info("Referral commission: {$referral->referrer->name} earned {$commissionAmount} from level {$referral->level}");
-                    }
+                    Log::info("Referral commission: {$referral->referrer->name} earned {$commissionAmount} from direct referral");
                 }
             });
         } catch (\Exception $e) {

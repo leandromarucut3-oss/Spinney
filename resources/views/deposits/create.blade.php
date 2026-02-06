@@ -146,7 +146,7 @@
                                         id="qr-image"
                                         src="{{ asset('unnamed (2).jpg') }}"
                                         alt="Bank Transfer QR Code"
-                                        class="hidden w-28 h-28 rounded-md border border-gray-200 dark:border-gray-700 object-cover"
+                                        class="hidden w-40 h-40 sm:w-32 sm:h-32 rounded-md border border-gray-200 dark:border-gray-700 object-cover"
                                     />
                                 </div>
                                 <div class="mt-2 text-xs text-gray-500">Scan to complete bank transfer.</div>

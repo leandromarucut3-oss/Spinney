@@ -30,58 +30,33 @@ class ProcessReferralBonus
                 // Signup bonus amount (configurable)
                 $signupBonus = 10.00;
 
-                // Create referral record
-                $referral = Referral::create([
-                    'referrer_id' => $referrer->id,
-                    'referred_id' => $user->id,
-                    'level' => 1,
-                    'signup_bonus' => $signupBonus,
-                    'status' => 'active',
-                ]);
-
-                // Award signup bonus to referrer
-                $referrer->addBalance(
-                    $signupBonus,
-                    'referral_signup',
-                    "Signup bonus for referring {$user->name}",
-                    $referral
+                // Direct signup only (no multi-level)
+                $referral = Referral::firstOrCreate(
+                    [
+                        'referrer_id' => $referrer->id,
+                        'referred_id' => $user->id,
+                        'level' => 1,
+                    ],
+                    [
+                        'signup_bonus' => $signupBonus,
+                        'status' => 'active',
+                    ]
                 );
 
-                // Process multi-level referrals (up to 3 levels)
-                $this->processMultiLevelReferrals($user, $referrer);
+                if ($referral->wasRecentlyCreated) {
+                    // Award signup bonus to referrer
+                    $referrer->addBalance(
+                        $signupBonus,
+                        'referral_signup',
+                        "Signup bonus for referring {$user->name}",
+                        $referral
+                    );
+                }
 
                 Log::info("Referral bonus processed: {$referrer->name} referred {$user->name}");
             });
         } catch (\Exception $e) {
             Log::error("Failed to process referral bonus: {$e->getMessage()}");
-        }
-    }
-
-    /**
-     * Process multi-level referral structure
-     */
-    private function processMultiLevelReferrals($newUser, $directReferrer): void
-    {
-        $currentReferrer = $directReferrer;
-        $level = 2;
-        $maxLevels = 3;
-
-        while ($level <= $maxLevels && $currentReferrer->referred_by) {
-            $currentReferrer = $currentReferrer->referrer;
-
-            if ($currentReferrer) {
-                Referral::create([
-                    'referrer_id' => $currentReferrer->id,
-                    'referred_id' => $newUser->id,
-                    'level' => $level,
-                    'signup_bonus' => 0,
-                    'status' => 'active',
-                ]);
-
-                $level++;
-            } else {
-                break;
-            }
         }
     }
 }

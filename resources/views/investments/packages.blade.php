@@ -17,11 +17,11 @@
                     </p>
                     <div class="mt-6 grid grid-cols-3 gap-6">
                         <div class="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
-                            <div class="text-2xl font-bold text-spinneys-gold mb-1">1.5% - 3%</div>
+                            <div class="text-2xl font-bold text-spinneys-gold mb-1">0.5% - 0.9%</div>
                             <div class="text-sm opacity-90">Daily Interest</div>
                         </div>
                         <div class="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
-                            <div class="text-2xl font-bold text-spinneys-gold mb-1">30-120</div>
+                            <div class="text-2xl font-bold text-spinneys-gold mb-1">90-150</div>
                             <div class="text-sm opacity-90">Days Duration</div>
                         </div>
                         <div class="bg-white/10 rounded-lg p-4 backdrop-blur-sm">

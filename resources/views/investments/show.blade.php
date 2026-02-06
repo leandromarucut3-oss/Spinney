@@ -155,7 +155,7 @@
                                     Investment Amount
                                 </label>
                                 <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <div class="absolute inset-y-0 left-0 w-12 flex items-center justify-center pointer-events-none">
                                         <span class="text-gray-500">AED</span>
                                     </div>
                                     <input type="number"
@@ -166,7 +166,7 @@
                                            step="0.01"
                                            value="{{ old('amount', $package->min_amount) }}"
                                            required
-                                           class="pl-7 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-spinneys-green focus:ring-spinneys-green">
+                                           class="pl-12 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-spinneys-green focus:ring-spinneys-green">
                                 </div>
                                 @error('amount')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

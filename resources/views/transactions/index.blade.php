@@ -23,6 +23,7 @@
                                 <option value="investment" @selected(request('type') === 'investment')>Investment</option>
                                 <option value="daily_interest" @selected(request('type') === 'daily_interest')>Interest Earned</option>
                                 <option value="referral_bonus" @selected(request('type') === 'referral_bonus')>Referral Bonus</option>
+                                <option value="admin_package_activation" @selected(request('type') === 'admin_package_activation')>Admin Package Activation</option>
                             </select>
                         </div>
                         <div>
@@ -63,7 +64,9 @@
                                                 {{ ucwords(str_replace('_', ' ', $transaction->type)) }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">
-                                                @if($transaction->isCredit())
+                                                @if($transaction->isNeutral())
+                                                    <span class="text-gray-600">@money($transaction->amount)</span>
+                                                @elseif($transaction->isCredit())
                                                     <span class="text-green-700">+ @money($transaction->amount)</span>
                                                 @else
                                                     <span class="text-red-700">- @money($transaction->amount)</span>

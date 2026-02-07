@@ -214,9 +214,11 @@
                             <div class="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0">
                                 <div class="flex items-center">
                                     <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3
-                                        {{ $transaction->isCredit() ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20' }}">
-                                        <svg class="w-4 h-4 {{ $transaction->isCredit() ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            @if($transaction->isCredit())
+                                        {{ $transaction->isNeutral() ? 'bg-gray-100 dark:bg-gray-900/20' : ($transaction->isCredit() ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20') }}">
+                                        <svg class="w-4 h-4 {{ $transaction->isNeutral() ? 'text-gray-600' : ($transaction->isCredit() ? 'text-green-600' : 'text-red-600') }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @if($transaction->isNeutral())
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8"></path>
+                                            @elseif($transaction->isCredit())
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
                                             @else
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path>
@@ -228,8 +230,12 @@
                                         <div class="text-xs text-gray-500">{{ $transaction->created_at->diffForHumans() }}</div>
                                     </div>
                                 </div>
-                                <div class="text-sm font-semibold {{ $transaction->isCredit() ? 'text-green-600' : 'text-red-600' }}">
-                                    {{ $transaction->isCredit() ? '+' : '-' }} @money($transaction->amount)
+                                <div class="text-sm font-semibold {{ $transaction->isNeutral() ? 'text-gray-600' : ($transaction->isCredit() ? 'text-green-600' : 'text-red-600') }}">
+                                    @if($transaction->isNeutral())
+                                        @money($transaction->amount)
+                                    @else
+                                        {{ $transaction->isCredit() ? '+' : '-' }} @money($transaction->amount)
+                                    @endif
                                 </div>
                             </div>
                             @empty

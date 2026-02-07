@@ -15,6 +15,16 @@
                     {{ session('error') }}
                 </div>
             @endif
+            @if($errors->any())
+                <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                    <div class="font-semibold">Please fix the highlighted errors.</div>
+                    <ul class="mt-2 list-disc pl-5 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <div class="grid md:grid-cols-4 gap-6">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -62,6 +72,41 @@
                 </form>
             </div>
 
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Activate Package for User</h3>
+                <form method="POST" action="{{ route('admin.investments.activate') }}" class="grid gap-4 md:grid-cols-4" id="admin-activate-form">
+                    @csrf
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="activate_user_id">Select User</label>
+                        <select id="activate_user_id" name="user_id" class="w-full rounded-lg border-gray-300 focus:border-spinneys-green focus:ring-spinneys-green" required>
+                            <option value="">Choose user</option>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="activate_package_id">Select Package</label>
+                        <select id="activate_package_id" name="package_id" class="w-full rounded-lg border-gray-300 focus:border-spinneys-green focus:ring-spinneys-green" required>
+                            <option value="">Choose package</option>
+                            @foreach($packages as $package)
+                                <option value="{{ $package->id }}" data-min="{{ $package->min_amount }}" data-max="{{ $package->max_amount }}">
+                                    {{ $package->name }} (AED {{ number_format($package->min_amount, 0) }} - AED {{ number_format($package->max_amount, 0) }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="activate_amount">Amount (AED)</label>
+                        <input id="activate_amount" name="amount" type="number" step="0.01" min="1" class="w-full rounded-lg border-gray-300 focus:border-spinneys-green focus:ring-spinneys-green" required>
+                        <div class="mt-1 text-xs text-gray-500" id="activate-range">Select a package to see the valid range.</div>
+                    </div>
+                    <div class="md:col-span-4">
+                        <button class="px-4 py-2 rounded-lg bg-spinneys-green text-white font-semibold hover:bg-spinneys-green-700">Activate Package</button>
+                    </div>
+                </form>
+            </div>
+
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
                 <div class="text-sm text-gray-500">Total Approved Deposits</div>
                 <div class="text-3xl font-bold text-gray-900 dark:text-white">
@@ -72,3 +117,37 @@
         </div>
     </div>
 </x-admin-layout>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const packageSelect = document.getElementById('activate_package_id');
+        const amountInput = document.getElementById('activate_amount');
+        const rangeText = document.getElementById('activate-range');
+
+        if (!packageSelect || !amountInput || !rangeText) {
+            return;
+        }
+
+        const updateRange = () => {
+            const selected = packageSelect.options[packageSelect.selectedIndex];
+            const min = selected?.dataset?.min;
+            const max = selected?.dataset?.max;
+
+            if (!min || !max) {
+                amountInput.removeAttribute('min');
+                amountInput.removeAttribute('max');
+                rangeText.textContent = 'Select a package to see the valid range.';
+                return;
+            }
+
+            amountInput.setAttribute('min', min);
+            amountInput.setAttribute('max', max);
+            rangeText.textContent = `Valid range: AED ${Number(min).toLocaleString()} - AED ${Number(max).toLocaleString()}`;
+        };
+
+        packageSelect.addEventListener('change', updateRange);
+        updateRange();
+    });
+</script>
+@endpush

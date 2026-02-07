@@ -51,6 +51,14 @@ class Transaction extends Model
     }
 
     /**
+     * Check if transaction does not change balance
+     */
+    public function isNeutral(): bool
+    {
+        return $this->balance_after == $this->balance_before;
+    }
+
+    /**
      * Check if transaction is debit
      */
     public function isDebit(): bool

@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\InvestmentCreated;
 use App\Models\Deposit;
+use App\Models\Investment;
+use App\Models\InvestmentPackage;
 use App\Models\User;
 use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
@@ -34,7 +38,12 @@ class AdminController extends Controller
             ->latest()
             ->get();
 
-        return view('admin.dashboard', compact('users', 'pendingDeposits', 'pendingWithdrawals'));
+        $packages = InvestmentPackage::query()
+            ->where('is_active', true)
+            ->orderBy('min_amount')
+            ->get();
+
+        return view('admin.dashboard', compact('users', 'pendingDeposits', 'pendingWithdrawals', 'packages'));
     }
 
     public function users()
@@ -148,5 +157,87 @@ class AdminController extends Controller
         }
 
         return back()->with('success', 'Transfer completed successfully.');
+    }
+
+    public function activateInvestment(Request $request)
+    {
+        if ($request->filled('amount')) {
+            $request->merge([
+                'amount' => app(\App\Services\CurrencyService::class)
+                    ->convertToBase((float) $request->input('amount')),
+            ]);
+        }
+
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'package_id' => 'required|exists:investment_packages,id',
+            'amount' => 'required|numeric|min:1',
+        ]);
+
+        $user = User::findOrFail($request->input('user_id'));
+        $package = InvestmentPackage::where('is_active', true)
+            ->whereKey($request->input('package_id'))
+            ->first();
+        $amount = (float) $request->input('amount');
+
+        if (! $package) {
+            return back()->with('error', 'Selected package is not active.');
+        }
+
+        if (! $user->canInvestInPackage($package)) {
+            return back()->with('error', 'User is not eligible for this package.');
+        }
+
+        if ($amount < $package->min_amount || $amount > $package->max_amount) {
+            return back()->with('error', 'Amount is outside the package range.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            if (! $package->decrementSlot()) {
+                DB::rollBack();
+                return back()->with('error', 'No slots available for this package.');
+            }
+
+            $dailyInterest = $package->calculateDailyInterest($amount);
+            $totalReturn = $package->calculateTotalReturn($amount);
+            $startDate = now();
+            $maturityDate = $startDate->copy()->addDays($package->duration_days);
+
+            $investment = Investment::create([
+                'user_id' => $user->id,
+                'package_id' => $package->id,
+                'amount' => $amount,
+                'daily_interest' => $dailyInterest,
+                'total_return' => $totalReturn,
+                'total_earned' => 0,
+                'duration_days' => $package->duration_days,
+                'start_date' => $startDate,
+                'maturity_date' => $maturityDate,
+                'status' => 'active',
+            ]);
+
+            $user->transactions()->create([
+                'type' => 'admin_package_activation',
+                'amount' => $amount,
+                'balance_before' => $user->balance,
+                'balance_after' => $user->balance,
+                'description' => 'Admin activated ' . $package->name . ' package',
+                'reference' => 'TXN-' . strtoupper(Str::random(12)),
+                'transactionable_type' => get_class($investment),
+                'transactionable_id' => $investment->id,
+            ]);
+
+            event(new InvestmentCreated($investment));
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Admin activation failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to activate package. Please try again.');
+        }
+
+        return back()->with('success', 'Package activated for user. Receipt #' . $investment->receipt_number);
     }
 }

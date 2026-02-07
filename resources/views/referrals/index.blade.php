@@ -57,6 +57,7 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tier</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Investments</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Investment Amount</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</th>
                                     </tr>
                                 </thead>
@@ -69,6 +70,7 @@
                                             </td>
                                             <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ ucfirst($referredUser->tier) }}</td>
                                             <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{{ $referredUser->investments_count }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">@money($referredUser->active_investments_amount ?? 0)</td>
                                             <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{{ $referredUser->created_at->format('M d, Y') }}</td>
                                         </tr>
                                     @endforeach

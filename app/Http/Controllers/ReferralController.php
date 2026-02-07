@@ -17,6 +17,9 @@ class ReferralController extends Controller
 
         $referredUsers = $user->referredUsers()
             ->withCount('investments')
+            ->withSum(['investments as active_investments_amount' => function ($query) {
+                $query->where('status', 'active');
+            }], 'amount')
             ->get();
 
         $totalCommission = $referrals->sum('total_commission');

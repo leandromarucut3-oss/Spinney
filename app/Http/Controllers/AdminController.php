@@ -6,10 +6,12 @@ use App\Events\InvestmentCreated;
 use App\Models\Deposit;
 use App\Models\Investment;
 use App\Models\InvestmentPackage;
+use App\Models\InterestLog;
 use App\Models\User;
 use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class AdminController extends Controller
@@ -239,5 +241,115 @@ class AdminController extends Controller
         }
 
         return back()->with('success', 'Package activated for user. Receipt #' . $investment->receipt_number);
+    }
+
+    public function backfillInterest(Request $request)
+    {
+        $request->validate([
+            'from_date' => 'required|date',
+            'to_date' => 'required|date',
+            'user_id' => 'nullable|exists:users,id',
+            'investment_id' => 'nullable|exists:investments,id',
+            'dry_run' => 'nullable|boolean',
+        ]);
+
+        $from = Carbon::parse($request->input('from_date'))->startOfDay();
+        $to = Carbon::parse($request->input('to_date'))->startOfDay();
+
+        if ($from->gt($to)) {
+            return back()->with('error', 'The start date must be before or equal to the end date.');
+        }
+
+        $maxDays = 31;
+        $spanDays = $from->diffInDays($to) + 1;
+        if ($spanDays > $maxDays) {
+            return back()->with('error', "Date range too large. Limit is {$maxDays} days.");
+        }
+
+        $query = Investment::where('status', 'active')
+            ->where('start_date', '<=', $to)
+            ->where('maturity_date', '>', $from)
+            ->with('user');
+
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->input('user_id'));
+        }
+
+        if ($request->filled('investment_id')) {
+            $query->where('id', $request->input('investment_id'));
+        }
+
+        $investments = $query->get();
+        $totalApplied = 0;
+        $totalSkipped = 0;
+        $dryRun = $request->boolean('dry_run');
+
+        foreach ($investments as $investment) {
+            if (! $investment->user) {
+                continue;
+            }
+
+            $current = $from->copy();
+            while ($current->lte($to)) {
+                $calcDate = $current->toDateString();
+
+                if ($current->lt($investment->start_date) || $current->gte($investment->maturity_date)) {
+                    $current->addDay();
+                    $totalSkipped++;
+                    continue;
+                }
+
+                $alreadyProcessed = InterestLog::where('investment_id', $investment->id)
+                    ->where('calculation_date', $calcDate)
+                    ->where('status', 'processed')
+                    ->exists();
+
+                if ($alreadyProcessed) {
+                    $current->addDay();
+                    $totalSkipped++;
+                    continue;
+                }
+
+                if ($dryRun) {
+                    $totalApplied++;
+                    $current->addDay();
+                    continue;
+                }
+
+                DB::transaction(function () use ($investment, $calcDate, &$totalApplied) {
+                    $user = $investment->user;
+                    $balanceBefore = $user->balance;
+
+                    $interestAmount = $investment->daily_interest;
+                    $user->addBalance(
+                        $interestAmount,
+                        'daily_interest',
+                        "Daily interest from investment {$investment->receipt_number} (manual {$calcDate})",
+                        $investment
+                    );
+
+                    $investment->total_earned += $interestAmount;
+                    $investment->save();
+
+                    InterestLog::create([
+                        'investment_id' => $investment->id,
+                        'user_id' => $user->id,
+                        'calculation_date' => $calcDate,
+                        'interest_amount' => $interestAmount,
+                        'balance_before' => $balanceBefore,
+                        'balance_after' => $user->fresh()->balance,
+                        'status' => 'processed',
+                    ]);
+
+                    $totalApplied++;
+                });
+
+                $current->addDay();
+            }
+        }
+
+        $mode = $dryRun ? 'Dry run' : 'Manual interest';
+
+        return back()->with('success', "{$mode} complete. Applied: {$totalApplied}. Skipped: {$totalSkipped}.");
     }
 }

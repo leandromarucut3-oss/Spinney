@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/admin/withdrawals/{withdrawal}/reject', [AdminController::class, 'rejectWithdrawal'])->name('admin.withdrawals.reject');
         Route::post('/admin/transfers', [AdminController::class, 'transferFunds'])->name('admin.transfers.store');
         Route::post('/admin/investments/activate', [AdminController::class, 'activateInvestment'])->name('admin.investments.activate');
+        Route::post('/admin/interest/backfill', [AdminController::class, 'backfillInterest'])->name('admin.interest.backfill');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

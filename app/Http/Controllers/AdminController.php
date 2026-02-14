@@ -51,6 +51,10 @@ class AdminController extends Controller
     public function users()
     {
         $users = User::query()
+            ->with(['investments' => function ($query) {
+                $query->with('package')
+                    ->orderBy('start_date', 'desc');
+            }])
             ->withSum(['deposits as total_deposits' => function ($query) {
                 $query->where('status', 'approved');
             }], 'amount')
